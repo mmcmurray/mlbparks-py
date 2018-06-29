@@ -1,0 +1,276 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "sonarqube",
+        "creationTimestamp": null
+    },
+    "objects": [
+        {
+            "kind": "Service",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${SONARQUBE_SERVICE_NAME}",
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "${SONARQUBE_SERVICE_NAME}",
+                    "name": "${SONARQUBE_SERVICE_NAME}"
+                }
+            },
+            "spec": {
+                "ports": [
+                    {
+                        "name": "9000-tcp",
+                        "protocol": "TCP",
+                        "port": 9000,
+                        "targetPort": 9000
+                    }
+                ],
+                "selector": {
+                    "app": "${SONARQUBE_SERVICE_NAME}",
+                    "deploymentconfig": "sonarqube",
+                    "name": "${SONARQUBE_SERVICE_NAME}"
+                },
+                "type": "ClusterIP",
+                "sessionAffinity": "None"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "kind": "DeploymentConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${SONARQUBE_SERVICE_NAME}",
+                "labels": {
+                    "app": "${SONARQUBE_SERVICE_NAME}",
+                    "name": "${SONARQUBE_SERVICE_NAME}"
+                }
+            },
+            "spec": {
+                "strategy": {
+                    "type": "Recreate",
+                    "recreateParams": {
+                        "timeoutSeconds": 600
+                    },
+                    "resources": {},
+                    "activeDeadlineSeconds": 21600
+                },
+                "triggers": [
+                    {
+                        "type": "ConfigChange"
+                    }
+                ],
+                "replicas": 1,
+                "selector": {
+                    "app": "${SONARQUBE_SERVICE_NAME}",
+                    "deploymentconfig": "${SONARQUBE_SERVICE_NAME}",
+                    "name": "${SONARQUBE_SERVICE_NAME}"
+                },
+                "template": {
+                    "metadata": {
+                        "creationTimestamp": null,
+                        "labels": {
+                            "app": "${SONARQUBE_SERVICE_NAME}",
+                            "deploymentconfig": "${SONARQUBE_SERVICE_NAME}",
+                            "name": "${SONARQUBE_SERVICE_NAME}"
+                        }
+                    },
+                    "spec": {
+                        "volumes": [
+                            {
+                                "name": "${SONARQUBE_SERVICE_NAME}-data",
+                                "persistentVolumeClaim": {
+                                    "claimName": "${SONARQUBE_SERVICE_NAME}-pvc"
+                                }
+                            }
+                            
+                        ],
+                        "containers": [
+                            {
+                                "name": "sonarqube",
+                                "image": "wkulhanek/sonarqube",
+                                "ports": [
+                                    {
+                                        "containerPort": 9000,
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "env": [
+                                    {
+                                        "name": "SONARQUBE_JDBC_PASSWORD",
+                                        "value": "${DATABASE_PASS}"
+                                    },
+                                    {
+                                        "name": "SONARQUBE_JDBC_URL",
+                                        "value": "jdbc:postgresql://${DATABASE_HOST}/${DATABASE_NAME}"
+                                    },
+                                    {
+                                        "name": "SONARQUBE_JDBC_USERNAME",
+                                        "value": "${DATABASE_USER}"
+                                    }
+                                ],
+                                "resources": {
+                                    "limits": {
+                                        "cpu": "2",
+                                        "memory": "2Gi"
+                                    },
+                                    "requests": {
+                                        "cpu": "1",
+                                        "memory": "1Gi"
+                                    }
+                                },
+                                "volumeMounts": [
+                                    {
+                                        "name": "${SONARQUBE_SERVICE_NAME}-data",
+                                        "mountPath": "/opt/sonarqube/data"
+                                    }
+                                ],
+                                "livenessProbe": {
+                                    "exec": {
+                                        "command": [
+                                            "echo",
+                                            "ok"
+                                        ]
+                                    },
+                                    "initialDelaySeconds": 40,
+                                    "timeoutSeconds": 1,
+                                    "periodSeconds": 10,
+                                    "successThreshold": 1,
+                                    "failureThreshold": 3
+                                },
+                                "readinessProbe": {
+                                    "httpGet": {
+                                        "path": "/about",
+                                        "port": 9000,
+                                        "scheme": "HTTP"
+                                    },
+                                    "initialDelaySeconds": 20,
+                                    "timeoutSeconds": 1,
+                                    "periodSeconds": 10,
+                                    "successThreshold": 1,
+                                    "failureThreshold": 3
+                                },
+                                "terminationMessagePath": "/dev/termination-log",
+                                "terminationMessagePolicy": "File",
+                                "imagePullPolicy": "IfNotPresent"
+                            }
+                        ],
+                        "restartPolicy": "Always",
+                        "terminationGracePeriodSeconds": 30,
+                        "dnsPolicy": "ClusterFirst",
+                        "securityContext": {},
+                        "schedulerName": "default-scheduler"
+                    }
+                }
+            }
+        },
+        {
+            "kind": "Route",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${SONARQUBE_SERVICE_NAME}",
+                "creationTimestamp": null,
+                "labels": {
+                    "app": "${SONARQUBE_SERVICE_NAME}",
+                    "name": "${SONARQUBE_SERVICE_NAME}"
+                }
+            },
+            "spec": {
+                "to": {
+                    "kind": "Service",
+                    "name": "${SONARQUBE_SERVICE_NAME}",
+                    "weight": 100
+                },
+                "port": {
+                    "targetPort": "9000-tcp"
+                },
+                "wildcardPolicy": "None"
+            },
+            "status": {
+                "ingress": [
+                    {
+                        "routerName": "router",
+                        "conditions": [
+                            {
+                                "type": "Admitted",
+                                "status": "True",
+                                "lastTransitionTime": "2018-06-27T03:21:51Z"
+                            }
+                        ],
+                        "wildcardPolicy": "None"
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "PersistentVolumeClaim",
+            "metadata": {
+                "name": "${SONARQUBE_SERVICE_NAME}-pvc"
+            },
+            "spec": {
+                "accessModes": [
+                    "ReadWriteOnce"
+                ],
+                "resources": {
+                    "requests": {
+                        "storage": "${VOLUME_CAPACITY}"
+                    }
+                }
+            }
+        }
+    ],
+    "parameters": [
+        {
+            "description": "The name of the OpenShift Service exposed for the Sonarqube container.",
+            "displayName": "Sonarqube Service Name",
+            "name": "SONARQUBE_SERVICE_NAME",
+            "value": "sonarqube"
+        },
+        {
+            "description": "The database host.  This can typically be left alone.",
+            "displayName": "Database Hostname",
+            "name": "DATABASE_HOST",
+            "value": "postgresql"
+        },
+        {
+            "description": "The name of the database we connect to.",
+            "displayName": "Database Name",
+            "name": "DATABASE_NAME",
+            "value": "sonar"
+        },        
+        {
+            "description": "The username used to connect to the database.",
+            "displayName": "Database Username",
+            "name": "DATABASE_USER",
+            "value": "dbuser"
+        },
+        {
+            "description": "The password used to connect to the database",
+            "displayName": "Database Password",
+            "name": "DATABASE_PASS",
+            "value": "p4ssw0rd"
+        },
+        {
+            "description": "Volume space available for data, e.g. 512Mi, 2Gi.",
+            "displayName": "Volume Capacity",
+            "name": "VOLUME_CAPACITY",
+            "required": true,
+            "value": "4Gi"
+        },
+        {
+            "description": "The OpenShift Namespace where the Sonarqube ImageStream resides.",
+            "displayName": "Sonarqube ImageStream Namespace",
+            "name": "NAMESPACE",
+            "value": "openshift"
+        },
+        {
+            "description": "Name of the ImageStreamTag to be used for the Sonarqube image.",
+            "displayName": "Sonarqube ImageStreamTag",
+            "name": "SONARQUBE_IMAGE_STREAM_TAG",
+            "value": "sonarqube:6.7.3"
+        }
+    ]
+}

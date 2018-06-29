@@ -1,0 +1,556 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "mongodb",
+        "creationTimestamp": null
+    },
+    "objects": [
+        {
+            "kind": "StatefulSet",
+            "apiVersion": "apps/v1",
+            "metadata": {
+                "name": "mongodb",
+                "generation": 2,
+                "creationTimestamp": null,
+                "labels": {
+                    "name": "mongodb"
+                }
+            },
+            "spec": {
+                "replicas": 2,
+                "selector": {
+                    "matchLabels": {
+                        "name": "mongodb"
+                    }
+                },
+                "template": {
+                    "metadata": {
+                        "creationTimestamp": null,
+                        "labels": {
+                            "name": "mongodb"
+                        }
+                    },
+                    "spec": {
+                        "containers": [
+                            {
+                                "name": "mongo-container",
+                                "image": "registry.access.redhat.com/rhscl/mongodb-34-rhel7:latest",
+                                "args": [
+                                    "run-mongod-replication"
+                                ],
+                                "ports": [
+                                    {
+                                        "containerPort": 27017,
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "env": [
+                                    {
+                                        "name": "MONGODB_DATABASE",
+                                        "value": "mongodb"
+                                    },
+                                    {
+                                        "name": "MONGODB_USER",
+                                        "value": "mongodb_user"
+                                    },
+                                    {
+                                        "name": "MONGODB_PASSWORD",
+                                        "value": "mongodb_password"
+                                    },
+                                    {
+                                        "name": "MONGODB_ADMIN_PASSWORD",
+                                        "value": "mongodb_admin_password"
+                                    },
+                                    {
+                                        "name": "MONGODB_REPLICA_NAME",
+                                        "value": "rs0"
+                                    },
+                                    {
+                                        "name": "MONGODB_KEYFILE_VALUE",
+                                        "value": "12345678901234567890"
+                                    },
+                                    {
+                                        "name": "MONGODB_SERVICE_NAME",
+                                        "value": "mongodb-internal"
+                                    }
+                                ],
+                                "resources": {},
+                                "volumeMounts": [
+                                    {
+                                        "name": "mongo-data",
+                                        "mountPath": "/var/lib/mongodb/data"
+                                    }
+                                ],
+                                "readinessProbe": {
+                                    "exec": {
+                                        "command": [
+                                            "stat",
+                                            "/tmp/initialized"
+                                        ]
+                                    },
+                                    "timeoutSeconds": 1,
+                                    "periodSeconds": 10,
+                                    "successThreshold": 1,
+                                    "failureThreshold": 3
+                                },
+                                "terminationMessagePath": "/dev/termination-log",
+                                "terminationMessagePolicy": "File",
+                                "imagePullPolicy": "Always"
+                            }
+                        ],
+                        "restartPolicy": "Always",
+                        "terminationGracePeriodSeconds": 30,
+                        "dnsPolicy": "ClusterFirst",
+                        "securityContext": {},
+                        "schedulerName": "default-scheduler"
+                    }
+                },
+                "volumeClaimTemplates": [
+                    {
+                        "metadata": {
+                            "name": "mongo-data",
+                            "creationTimestamp": null,
+                            "labels": {
+                                "name": "mongodb"
+                            }
+                        },
+                        "spec": {
+                            "accessModes": [
+                                "ReadWriteOnce"
+                            ],
+                            "resources": {
+                                "requests": {
+                                    "storage": "4Gi"
+                                }
+                            }
+                        },
+                        "status": {
+                            "phase": "Pending"
+                        }
+                    }
+                ],
+                "serviceName": "mongodb-internal",
+                "podManagementPolicy": "OrderedReady",
+                "updateStrategy": {
+                    "type": "RollingUpdate",
+                    "rollingUpdate": {
+                        "partition": 0
+                    }
+                },
+                "revisionHistoryLimit": 10
+            },
+            "status": {
+                "observedGeneration": 2,
+                "replicas": 2,
+                "readyReplicas": 2,
+                "currentReplicas": 2,
+                "currentRevision": "mongodb-84c5cf6978",
+                "updateRevision": "mongodb-84c5cf6978",
+                "collisionCount": 0
+            }
+        },
+        {
+            "kind": "Pod",
+            "apiVersion": "v1",
+            "metadata": {
+                "generateName": "mongodb-",
+                "creationTimestamp": null,
+                "labels": {
+                    "controller-revision-hash": "mongodb-84c5cf6978",
+                    "name": "mongodb",
+                    "statefulset.kubernetes.io/pod-name": "mongodb-0"
+                },
+                "annotations": {
+                    "kubernetes.io/limit-ranger": "LimitRanger plugin set: cpu, memory request for container mongo-container; cpu, memory limit for container mongo-container",
+                    "openshift.io/scc": "restricted"
+                },
+                "ownerReferences": [
+                    {
+                        "apiVersion": "apps/v1beta1",
+                        "kind": "StatefulSet",
+                        "name": "mongodb",
+                        "uid": "a261f7dc-7951-11e8-8dcf-0220bffb280e",
+                        "controller": true,
+                        "blockOwnerDeletion": true
+                    }
+                ]
+            },
+            "spec": {
+                "volumes": [
+                    {
+                        "name": "mongo-data",
+                        "persistentVolumeClaim": {
+                            "claimName": "mongo-data-mongodb-0"
+                        }
+                    },
+                    {
+                        "name": "default-token-mjdrp",
+                        "secret": {
+                            "secretName": "default-token-mjdrp",
+                            "defaultMode": 420
+                        }
+                    }
+                ],
+                "containers": [
+                    {
+                        "name": "mongo-container",
+                        "image": "registry.access.redhat.com/rhscl/mongodb-34-rhel7:latest",
+                        "args": [
+                            "run-mongod-replication"
+                        ],
+                        "ports": [
+                            {
+                                "containerPort": 27017,
+                                "protocol": "TCP"
+                            }
+                        ],
+                        "env": [
+                            {
+                                "name": "MONGODB_DATABASE",
+                                "value": "mongodb"
+                            },
+                            {
+                                "name": "MONGODB_USER",
+                                "value": "mongodb_user"
+                            },
+                            {
+                                "name": "MONGODB_PASSWORD",
+                                "value": "mongodb_password"
+                            },
+                            {
+                                "name": "MONGODB_ADMIN_PASSWORD",
+                                "value": "mongodb_admin_password"
+                            },
+                            {
+                                "name": "MONGODB_REPLICA_NAME",
+                                "value": "rs0"
+                            },
+                            {
+                                "name": "MONGODB_KEYFILE_VALUE",
+                                "value": "12345678901234567890"
+                            },
+                            {
+                                "name": "MONGODB_SERVICE_NAME",
+                                "value": "mongodb-internal"
+                            }
+                        ],
+                        "resources": {
+                            "limits": {
+                                "cpu": "500m",
+                                "memory": "1536Mi"
+                            },
+                            "requests": {
+                                "cpu": "50m",
+                                "memory": "256Mi"
+                            }
+                        },
+                        "volumeMounts": [
+                            {
+                                "name": "mongo-data",
+                                "mountPath": "/var/lib/mongodb/data"
+                            },
+                            {
+                                "name": "default-token-mjdrp",
+                                "readOnly": true,
+                                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount"
+                            }
+                        ],
+                        "readinessProbe": {
+                            "exec": {
+                                "command": [
+                                    "stat",
+                                    "/tmp/initialized"
+                                ]
+                            },
+                            "timeoutSeconds": 1,
+                            "periodSeconds": 10,
+                            "successThreshold": 1,
+                            "failureThreshold": 3
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "imagePullPolicy": "Always",
+                        "securityContext": {
+                            "capabilities": {
+                                "drop": [
+                                    "KILL",
+                                    "MKNOD",
+                                    "SETGID",
+                                    "SETUID"
+                                ]
+                            },
+                            "runAsUser": 1005260000
+                        }
+                    }
+                ],
+                "restartPolicy": "Always",
+                "terminationGracePeriodSeconds": 30,
+                "dnsPolicy": "ClusterFirst",
+                "nodeSelector": {
+                    "env": "users"
+                },
+                "serviceAccountName": "default",
+                "serviceAccount": "default",
+                "nodeName": "node1.na39.internal",
+                "securityContext": {
+                    "seLinuxOptions": {
+                        "level": "s0:c73,c2"
+                    },
+                    "fsGroup": 1005260000
+                },
+                "imagePullSecrets": [
+                    {
+                        "name": "default-dockercfg-d4fqz"
+                    }
+                ],
+                "hostname": "mongodb-0",
+                "subdomain": "mongodb-internal",
+                "schedulerName": "default-scheduler",
+                "tolerations": [
+                    {
+                        "key": "node.kubernetes.io/memory-pressure",
+                        "operator": "Exists",
+                        "effect": "NoSchedule"
+                    }
+                ]
+            },
+            "status": {
+                "phase": "Pending",
+                "qosClass": "Burstable"
+            }
+        },
+        {
+            "kind": "Pod",
+            "apiVersion": "v1",
+            "metadata": {
+                "generateName": "mongodb-",
+                "creationTimestamp": null,
+                "labels": {
+                    "controller-revision-hash": "mongodb-84c5cf6978",
+                    "name": "mongodb",
+                    "statefulset.kubernetes.io/pod-name": "mongodb-1"
+                },
+                "annotations": {
+                    "kubernetes.io/limit-ranger": "LimitRanger plugin set: cpu, memory request for container mongo-container; cpu, memory limit for container mongo-container",
+                    "openshift.io/scc": "restricted"
+                },
+                "ownerReferences": [
+                    {
+                        "apiVersion": "apps/v1beta1",
+                        "kind": "StatefulSet",
+                        "name": "mongodb",
+                        "uid": "a261f7dc-7951-11e8-8dcf-0220bffb280e",
+                        "controller": true,
+                        "blockOwnerDeletion": true
+                    }
+                ]
+            },
+            "spec": {
+                "volumes": [
+                    {
+                        "name": "mongo-data",
+                        "persistentVolumeClaim": {
+                            "claimName": "mongo-data-mongodb-1"
+                        }
+                    },
+                    {
+                        "name": "default-token-mjdrp",
+                        "secret": {
+                            "secretName": "default-token-mjdrp",
+                            "defaultMode": 420
+                        }
+                    }
+                ],
+                "containers": [
+                    {
+                        "name": "mongo-container",
+                        "image": "registry.access.redhat.com/rhscl/mongodb-34-rhel7:latest",
+                        "args": [
+                            "run-mongod-replication"
+                        ],
+                        "ports": [
+                            {
+                                "containerPort": 27017,
+                                "protocol": "TCP"
+                            }
+                        ],
+                        "env": [
+                            {
+                                "name": "MONGODB_DATABASE",
+                                "value": "mongodb"
+                            },
+                            {
+                                "name": "MONGODB_USER",
+                                "value": "mongodb_user"
+                            },
+                            {
+                                "name": "MONGODB_PASSWORD",
+                                "value": "mongodb_password"
+                            },
+                            {
+                                "name": "MONGODB_ADMIN_PASSWORD",
+                                "value": "mongodb_admin_password"
+                            },
+                            {
+                                "name": "MONGODB_REPLICA_NAME",
+                                "value": "rs0"
+                            },
+                            {
+                                "name": "MONGODB_KEYFILE_VALUE",
+                                "value": "12345678901234567890"
+                            },
+                            {
+                                "name": "MONGODB_SERVICE_NAME",
+                                "value": "mongodb-internal"
+                            }
+                        ],
+                        "resources": {
+                            "limits": {
+                                "cpu": "500m",
+                                "memory": "1536Mi"
+                            },
+                            "requests": {
+                                "cpu": "50m",
+                                "memory": "256Mi"
+                            }
+                        },
+                        "volumeMounts": [
+                            {
+                                "name": "mongo-data",
+                                "mountPath": "/var/lib/mongodb/data"
+                            },
+                            {
+                                "name": "default-token-mjdrp",
+                                "readOnly": true,
+                                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount"
+                            }
+                        ],
+                        "readinessProbe": {
+                            "exec": {
+                                "command": [
+                                    "stat",
+                                    "/tmp/initialized"
+                                ]
+                            },
+                            "timeoutSeconds": 1,
+                            "periodSeconds": 10,
+                            "successThreshold": 1,
+                            "failureThreshold": 3
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "imagePullPolicy": "Always",
+                        "securityContext": {
+                            "capabilities": {
+                                "drop": [
+                                    "KILL",
+                                    "MKNOD",
+                                    "SETGID",
+                                    "SETUID"
+                                ]
+                            },
+                            "runAsUser": 1005260000
+                        }
+                    }
+                ],
+                "restartPolicy": "Always",
+                "terminationGracePeriodSeconds": 30,
+                "dnsPolicy": "ClusterFirst",
+                "nodeSelector": {
+                    "env": "users"
+                },
+                "serviceAccountName": "default",
+                "serviceAccount": "default",
+                "nodeName": "node2.na39.internal",
+                "securityContext": {
+                    "seLinuxOptions": {
+                        "level": "s0:c73,c2"
+                    },
+                    "fsGroup": 1005260000
+                },
+                "imagePullSecrets": [
+                    {
+                        "name": "default-dockercfg-d4fqz"
+                    }
+                ],
+                "hostname": "mongodb-1",
+                "subdomain": "mongodb-internal",
+                "schedulerName": "default-scheduler",
+                "tolerations": [
+                    {
+                        "key": "node.kubernetes.io/memory-pressure",
+                        "operator": "Exists",
+                        "effect": "NoSchedule"
+                    }
+                ]
+            },
+            "status": {
+                "phase": "Pending",
+                "qosClass": "Burstable"
+            }
+        },
+        {
+            "kind": "Service",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "mongodb",
+                "creationTimestamp": null,
+                "labels": {
+                    "name": "mongodb"
+                }
+            },
+            "spec": {
+                "ports": [
+                    {
+                        "name": "mongodb",
+                        "protocol": "TCP",
+                        "port": 27017,
+                        "targetPort": 27017
+                    }
+                ],
+                "selector": {
+                    "name": "mongodb"
+                },
+                "type": "ClusterIP",
+                "sessionAffinity": "None"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "kind": "Service",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "mongodb-internal",
+                "creationTimestamp": null,
+                "labels": {
+                    "name": "mongodb"
+                },
+                "annotations": {
+                    "service.alpha.kubernetes.io/tolerate-unready-endpoints": "true"
+                }
+            },
+            "spec": {
+                "ports": [
+                    {
+                        "name": "mongodb",
+                        "protocol": "TCP",
+                        "port": 27017,
+                        "targetPort": 27017
+                    }
+                ],
+                "selector": {
+                    "name": "mongodb"
+                },
+                "clusterIP": "None",
+                "type": "ClusterIP",
+                "sessionAffinity": "None"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        }
+    ]
+}
