@@ -77,14 +77,18 @@ oc new-project ${__OCP_PREFIX}-devops --display-name "DevOps Resources"
 
 ```
 2. Create and configure persistent Jenkins service:
-```bash
-oc new-app jenkins-persistent -p ENABLE_OAUTH=true -p MEMORY_LIMIT=2.0Gi -n ${__OCP_PREFIX}-devops -l name='jenkins' 
-```
-	1. Login to jenkins UI and install a few plugins that we will require:
+	1. Create Jenkins Service.
+	```bash
+	oc new-app jenkins-persistent -p ENABLE_OAUTH=true -p MEMORY_LIMIT=2.0Gi -n ${__OCP_PREFIX}-devops -l name='jenkins' 
+	```
+	2. Login to jenkins UI and install a few plugins that we will require:
 	**Note:** The following will get the URL for your Jenkins Web UI.
 	```
-	 oc get route | grep jenkins | gawk '{print $2}' | sed -e 's/\(.*\)/https:\/\/\1/g'
+	 echo "https://$(oc get route jenkins --template='{{ .spec.host }}')"
 	```
+	3. Navigate to the plugin manager in the Jenkins UI and install the following plugins:
+		* Gogs
+		* Foo...
 3. Setup SonarQube service for static code analysis in the pipeline:
 	1. Setup the PostgresDB service.
 	```bash
