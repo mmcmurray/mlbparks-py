@@ -1,4 +1,5 @@
-mod_wsgi
+uwsgi
 Flask
 flask-restful
 pymongo
+pytest
