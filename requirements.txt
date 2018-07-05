@@ -2,4 +2,3 @@ uwsgi
 Flask
 flask-restful
 pymongo
-pytest

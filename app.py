@@ -3,29 +3,33 @@ from __future__ import print_function
 import os
 import json
 
-from flask import Flask, request
+from flask import Flask, request, render_template
 from flask_restful import Resource, Api
 
 from pymongo import MongoClient, GEO2D
 
 DB_HOST = os.environ.get('DB_HOST', 'mongodb')
 DB_NAME = os.environ.get('DB_NAME', 'mongodb')
+DB_PORT = os.environ.get('DB_PORT', 27017)
 
 DB_USERNAME = os.environ.get('DB_USERNAME', 'mongodb')
 DB_PASSWORD = os.environ.get('DB_PASSWORD', 'mongodb')
 
-DB_URI = 'mongodb://%s:%s@%s:27017/%s' % (DB_USERNAME, DB_PASSWORD,
-        DB_HOST, DB_NAME)
+DB_URI = 'mongodb://%s:%s@%s:%s/%s' % (DB_USERNAME, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME)
 
 DATASET_FILE = 'mlbparks.json'
 
-application = Flask(__name__)
+app = Flask(__name__)
 
-api = Api(application)
+api = Api(app)
+
+@app.route('/')
+def home():
+    return render_template('index.html')
 
 class HealthCheck(Resource):
     def get(self):
-        return 'OK'
+      return 'OK'
 
 api.add_resource(HealthCheck, '/ws/healthz/')
 

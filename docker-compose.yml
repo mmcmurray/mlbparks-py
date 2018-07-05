@@ -1,0 +1,50 @@
+version: '2.1'
+
+services:
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongodb
+      MONGO_INITDB_ROOT_PASSWORD: mongodb
+    networks:
+      - private
+
+  app:
+    depends_on:
+      - mongo
+    build: .
+    command: flask run -h 0.0.0.0
+    #command: uwsgi uwsgi.ini
+    volumes:
+      - .:/code
+    environment:
+      FLASK_APP: app.py
+      FLASK_DEBUG: 1
+      FLASK_ENV: development
+      PORT: 5000
+      DB_HOST: mongo
+      DB_NAME: admin
+      DB_PORT: 27017
+      DB_USERNAME: mongodb
+      DB_PASSWORD: mongodb
+    networks:
+      - dmz
+      - private
+
+  nginx:
+    depends_on:
+      - app
+    image: "nginx:1.13.5"
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx_conf:/etc/nginx/conf.d
+    networks:
+      - dmz
+
+networks:
+  private:
+    driver: bridge
+  dmz:
+    driver: bridge

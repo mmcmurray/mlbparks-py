@@ -107,7 +107,7 @@ oc new-project ${__OCP_PREFIX}-devops --display-name "DevOps Resources"
 4. Create and configure Gogs service for Source Control Management (SCM)
 	1. We will re-use the `postgresql` service that we used for SonarQube as the backend for Gogs.  We do, however, need to create the postgres db for this.
 	```bash
-	oc exec $(oc get pods | grep postgresql | grep -v deploy | gawk '{print $1}') -- bash -c 'createdb gogs -O sonar'
+	oc exec $(oc get pods | grep postgresql | grep -v deploy | gawk '{print $1}') -- bash -c 'createdb gogs -O dbuser'
 	```
 	2. Create a `ConfigMap` so that we can configure Gogs to talk to the `postgresql` persistent database.
 	```bash
@@ -132,7 +132,7 @@ oc new-project ${__OCP_PREFIX}-devops --display-name "DevOps Resources"
 	```
 	8. Navigate to the Gogs UI (can be found via the following:
 	```bash
-	oc get route | grep gogs | gawk '{print $2}' | sed -e 's/\(.*\)/http:\/\/\1/g'
+	echo "https://$(oc get route gogs --template='{{ .spec.host }}')"
 	```
 	9. Register a new user in Gogs UI so we can create an Organization and Repo.
 		1. **Organization:** `ocp_adv_dev`
